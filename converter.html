@@ -1,0 +1,98 @@
+<html>
+<head>
+  <style type="text/css">
+  #container {
+    text-align: left;
+    background-color: #e6ccff;
+    border-radius: 10px;
+    margin-right: auto;
+    margin-left:auto;
+    width: 350px;
+    padding: 20px;
+  }
+  body {
+    font: 14px Arial;
+    line-height: 2;
+    text-align: center;
+  }
+  input[type=text]{
+    float: right;
+  }
+  button {
+    font-size: 14px;
+    position:relative;
+    left:35%;
+    margin: 10px;
+  }
+  #radio {
+    text-align: center;
+  }
+  </style>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js" type="text/javascript"></script>
+  <script>
+  var computeLevelAndOffset = function(startUnixTimeSecs, durationSecs) {
+     var level = computeLevel(durationSecs);
+     return {
+        level : level,
+        offset : computeOffset(startUnixTimeSecs, level)
+     }
+  };
+
+  var computeLevel = function(durationSecs) {
+     var secsPerBin = durationSecs / 512;
+     return Math.floor(Math.log(secsPerBin) / Math.log(2));
+  };
+
+  var computeOffset = function(timestampUnixTimeSecs, level) {
+     var tileWidth = Math.pow(2, level) * 512;
+     return Math.floor(timestampUnixTimeSecs / tileWidth);
+  };
+
+  var computeStartAndEndTimes = function(level, offset) {
+     var tileDuration = 512 * Math.pow(2, level);
+     var start = offset * tileDuration;
+     return {
+        startUnixTimeSecs : start,
+        endUnixTimeSecs : start + tileDuration
+     }
+  };
+
+  var compute = function() {
+    var startUnixTimeSecs = $("#epoch").val();
+    var duration = $("#duration").val();
+    switch ($(":checked").val()){
+      case "minutes":
+        duration = duration * 60;
+        break;
+      case "hours":
+        duration = duration * 60 * 60;
+        break;
+      case "days":
+        duration = duration * 60 * 60 * 24;
+        break;
+    }
+    var result = computeLevelAndOffset(startUnixTimeSecs, duration);
+    $("#output").val(result.level + "." + result.offset);
+  }
+  </script>
+  <title>ESDR Converter</title>
+</head>
+<body>
+  <h2>ESDR Level and Offset Calculator</h2>
+  This is a tool for calculating level and offset for making calls to the ESDR API. You can generate your start time at a site such as <a href="http://epochconverter.com" target="_blank">epochconverter.com</a>
+  <div id="container">
+  Start time (Unix timestamp): <input id="epoch" type="text"></input>
+  <br>
+  Duration: <input id="duration" type="text"></input>
+  <br>
+  <div id="radio">
+    <input type="radio" name="time-unit" value="minutes">Minutes
+    <input type="radio" name="time-unit" value="hours" checked>Hours
+    <input type="radio" name="time-unit" value="days">Days
+  </div>
+  <button onclick="compute()">Compute</button>
+  <br>
+  Result: <input id="output" type="text"></input>
+</div>
+</body>
+</html>
